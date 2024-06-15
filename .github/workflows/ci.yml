@@ -1,0 +1,38 @@
+name: CI
+on:
+ push:
+   branches:
+     - master
+jobs:
+ build:
+   runs-on: ubuntu-latest
+   steps:
+     - uses: actions/checkout@v2
+     - name: use node.jd
+       uses: actions/setup-node@v1 
+       with:
+         node-version: 12
+     - name: Install Dependencies
+       run: npm install
+     - name: Run Test
+       run: npm test
+     - name: "logs into Docker Hub account"
+       uses: Docker/login-action@v3
+       with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+     - name: Build our code image   # step description: builds our Docker image
+       env: 			           # sets environment variables for this step
+        image_name: test-image     # image name variable
+        version: 1                                  # version variable
+        username: monyslim            # Docker Hub username
+       run: |                                              # script to run the Docker commands
+          docker build -t $username/$image_name:$version .  # builds the Docker image with the given name and version
+          docker pull $username/$image_name:$version
+          docker run -d -- name test-app -p 809:80 $username/$image_name:$version # runs the Docker container in detached mode, maps port 809 to 80
+         
+      
+                
+
+
+
